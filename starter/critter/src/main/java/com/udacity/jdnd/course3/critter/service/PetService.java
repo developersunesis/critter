@@ -1,9 +1,7 @@
 package com.udacity.jdnd.course3.critter.service;
 
-import com.udacity.jdnd.course3.critter.dto.PetDTO;
 import com.udacity.jdnd.course3.critter.model.PetModel;
 import com.udacity.jdnd.course3.critter.repository.PetRepository;
-import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -18,9 +16,7 @@ public class PetService {
     @Autowired
     PetRepository petRepository;
 
-    public PetModel savePet(PetDTO petDTO) {
-        PetModel petModel = new PetModel();
-        BeanUtils.copyProperties(petDTO, petModel);
+    public PetModel savePet(PetModel petModel) {
         petModel.setId(null);
         return petRepository.save(petModel);
     }
@@ -31,7 +27,7 @@ public class PetService {
     }
 
     public List<PetModel> findPetByOwnerId(long ownerId) {
-        return petRepository.findAllByOwnerIdOrderByIdDesc(ownerId);
+        return petRepository.findAllByOwnerId(ownerId);
     }
 
     public List<Long> getCustomerPetIds(Long id) {
@@ -44,14 +40,7 @@ public class PetService {
         return petRepository.save(petModel);
     }
 
-    public List<PetDTO> findAllPets() {
-        List<PetDTO> petDTOS = new ArrayList<>();
-        petRepository.findAll().forEach(petModel -> {
-            PetDTO petDTO = new PetDTO();
-            BeanUtils.copyProperties(petModel, petDTO);
-            petDTOS.add(petDTO);
-        });
-
-        return petDTOS;
+    public List<PetModel> findAllPets() {
+        return (List<PetModel>) petRepository.findAll();
     }
 }

@@ -20,34 +20,44 @@ public class PetController {
     @Autowired
     PetService petService;
 
-    @PostMapping
-    public PetDTO savePet(@RequestBody PetDTO petDTO) {
-        PetModel petModel = petService.savePet(petDTO);
-        BeanUtils.copyProperties(petModel, petDTO);
-        return petDTO;
+    private PetModel convertPetToEntity(PetDTO petDTO){
+        PetModel petModel = new PetModel();
+        BeanUtils.copyProperties(petDTO, petModel);
+        return petModel;
     }
 
-    @GetMapping("/{petId}")
-    public PetDTO getPet(@PathVariable long petId) {
-        PetModel petModel = petService.findPetById(petId);
+    private PetDTO convertPetToDTO(PetModel petModel){
         PetDTO petDTO = new PetDTO();
         BeanUtils.copyProperties(petModel, petDTO);
         return petDTO;
     }
 
+    @PostMapping
+    public PetDTO savePet(@RequestBody PetDTO petDTO) {
+        PetModel petModel = convertPetToEntity(petDTO);
+        petModel = petService.savePet(petModel);
+        return convertPetToDTO(petModel);
+    }
+
+    @GetMapping("/{petId}")
+    public PetDTO getPet(@PathVariable long petId) {
+        PetModel petModel = petService.findPetById(petId);
+        return convertPetToDTO(petModel);
+    }
+
     @PostMapping("/{customerId}")
     public PetDTO setCustomerPet(@PathVariable long customerId, @RequestBody PetDTO petDTO) {
-        PetModel petModel = new PetModel();
-        petDTO.setOwnerId(customerId);
-        BeanUtils.copyProperties(petDTO, petModel);
+        PetModel petModel = convertPetToEntity(petDTO);
+        petModel.setOwnerId(customerId);
         petModel = petService.updatePet(petModel);
-        BeanUtils.copyProperties(petModel, petDTO);
-        return petDTO;
+        return convertPetToDTO(petModel);
     }
 
     @GetMapping
     public List<PetDTO> getPets(){
-        return petService.findAllPets();
+        List<PetDTO> petDTOS = new ArrayList<>();
+        petService.findAllPets().forEach(petModel -> petDTOS.add(convertPetToDTO(petModel)));
+        return petDTOS;
     }
 
     @GetMapping("/owner/{ownerId}")

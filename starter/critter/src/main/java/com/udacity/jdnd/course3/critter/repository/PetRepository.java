@@ -9,5 +9,5 @@ import java.util.List;
 @Repository
 public interface PetRepository extends CrudRepository<PetModel, Long> {
 
-    List<PetModel> findAllByOwnerIdOrderByIdDesc(long id);
+    List<PetModel> findAllByOwnerId(long id);
 }

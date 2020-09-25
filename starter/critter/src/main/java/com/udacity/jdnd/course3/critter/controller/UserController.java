@@ -4,10 +4,7 @@ import com.udacity.jdnd.course3.critter.dto.CustomerDTO;
 import com.udacity.jdnd.course3.critter.dto.EmployeeDTO;
 import com.udacity.jdnd.course3.critter.dto.EmployeeRequestDTO;
 import com.udacity.jdnd.course3.critter.enums.EmployeeSkill;
-import com.udacity.jdnd.course3.critter.model.CustomerModel;
-import com.udacity.jdnd.course3.critter.model.DayOfWeekModel;
-import com.udacity.jdnd.course3.critter.model.EmployeeModel;
-import com.udacity.jdnd.course3.critter.model.PetModel;
+import com.udacity.jdnd.course3.critter.model.*;
 import com.udacity.jdnd.course3.critter.service.PetService;
 import com.udacity.jdnd.course3.critter.service.UserService;
 import org.springframework.beans.BeanUtils;
@@ -15,6 +12,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.DayOfWeek;
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -35,16 +33,57 @@ public class UserController {
     @Autowired
     PetService petService;
 
+    private CustomerDTO convertCustomerToDTO(CustomerModel customerModel){
+        CustomerDTO customerDTO = new CustomerDTO();
+        BeanUtils.copyProperties(customerModel, customerDTO);
+        return customerDTO;
+    }
+
+    private CustomerModel convertCustomerToEntity(CustomerDTO customerDTO){
+        CustomerModel customerModel = new CustomerModel();
+        BeanUtils.copyProperties(customerDTO, customerModel);
+        return customerModel;
+    }
+
+    private EmployeeDTO convertEmployeeToDTO(EmployeeModel employeeModel, boolean includeDays){
+        EmployeeDTO employeeDTO = new EmployeeDTO();
+        BeanUtils.copyProperties(employeeModel, employeeDTO);
+
+        Set<EmployeeSkill> skills = new HashSet<>();
+        employeeModel.getSkills().forEach(employeeSkillModel -> skills.add(employeeSkillModel.getSkill()));
+        employeeDTO.setSkills(skills);
+
+        if(includeDays){
+            List<DayOfWeekModel> dayOfWeekModels = employeeModel.getDaysAvailable();
+            if(dayOfWeekModels != null) {
+                Set<DayOfWeek> dayOfWeeks = new HashSet<>();
+                dayOfWeekModels.forEach(dayOfWeekModel ->
+                        dayOfWeeks.add(dayOfWeekModel.getDayOfWeek()));
+                employeeDTO.setDaysAvailable(dayOfWeeks);
+            }
+        }
+
+        return employeeDTO;
+    }
+
     @PostMapping("/customer")
     public CustomerDTO saveCustomer(@RequestBody CustomerDTO customerDTO){
-        CustomerModel customerModel = userService.saveCustomer(customerDTO);
+        CustomerModel customerModel = convertCustomerToEntity(customerDTO);
+        customerModel = userService.saveCustomer(customerModel);
         BeanUtils.copyProperties(customerModel, customerDTO);
         return customerDTO;
     }
 
     @GetMapping("/customer")
     public List<CustomerDTO> getAllCustomers(){
-        return userService.findAllCustomers();
+        List<CustomerDTO> customerDTOS = new ArrayList<>();
+        userService.findAllCustomers().forEach(
+                customerModel -> {
+                    CustomerDTO customerDTO = convertCustomerToDTO(customerModel);
+                    customerDTO.setPetIds(petService.getCustomerPetIds(customerModel.getId()));
+                    customerDTOS.add(customerDTO);
+                });
+        return customerDTOS;
     }
 
     @GetMapping("/customer/pet/{petId}")
@@ -59,12 +98,23 @@ public class UserController {
 
     @PostMapping("/employee")
     public EmployeeDTO saveEmployee(@RequestBody EmployeeDTO employeeDTO) {
-        return userService.saveEmployee(employeeDTO);
+        EmployeeModel employeeModel = new EmployeeModel();
+        employeeDTO.getSkills().forEach(employeeSkill ->
+                employeeModel.addSkill(EmployeeSkillModel.builder()
+                        .skill(employeeSkill).build()));
+
+        if(employeeDTO.getDaysAvailable() != null)
+            employeeDTO.getDaysAvailable().forEach(employeeModel::addAvailableDay);
+
+        employeeModel.setName(employeeDTO.getName());
+
+        return convertEmployeeToDTO(userService.saveEmployee(employeeModel), false);
     }
 
     @PostMapping("/employee/{employeeId}")
     public EmployeeDTO getEmployee(@PathVariable long employeeId) {
-        return userService.getEmployeeDTOById(employeeId);
+        EmployeeModel employeeModel = userService.getEmployeeById(employeeId);
+        return convertEmployeeToDTO(employeeModel, true);
     }
 
     @PutMapping("/employee/{employeeId}")
@@ -76,7 +126,12 @@ public class UserController {
 
     @GetMapping("/employee/availability")
     public List<EmployeeDTO> findEmployeesForService(@RequestBody EmployeeRequestDTO employeeDTO) {
-        return userService.findEmployeesForService(employeeDTO);
+        List<EmployeeDTO> employeeDTOS = new ArrayList<>();
+
+        userService.findEmployeesForService(employeeDTO).forEach(employeeModel ->
+                employeeDTOS.add(convertEmployeeToDTO(employeeModel, true)));
+
+        return employeeDTOS;
     }
 
 }

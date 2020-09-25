@@ -3,7 +3,7 @@ package com.udacity.jdnd.course3.critter.model;
 import lombok.Getter;
 import lombok.Setter;
 
-import javax.persistence.*;
+import javax.persistence.Entity;
 
 /**
  * This class is a sub class of users that will be making use of this
