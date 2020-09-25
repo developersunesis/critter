@@ -1,6 +1,5 @@
 package com.udacity.jdnd.course3.critter.service;
 
-import com.udacity.jdnd.course3.critter.dto.CustomerDTO;
 import com.udacity.jdnd.course3.critter.dto.PetDTO;
 import com.udacity.jdnd.course3.critter.model.PetModel;
 import com.udacity.jdnd.course3.critter.repository.PetRepository;
