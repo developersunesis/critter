@@ -4,12 +4,12 @@ import com.udacity.jdnd.course3.critter.dto.ScheduleDTO;
 import com.udacity.jdnd.course3.critter.enums.EmployeeSkill;
 import com.udacity.jdnd.course3.critter.model.EmployeeModel;
 import com.udacity.jdnd.course3.critter.model.PetModel;
-import com.udacity.jdnd.course3.critter.model.ScheduleActivitiesModel;
 import com.udacity.jdnd.course3.critter.model.ScheduleModel;
 import com.udacity.jdnd.course3.critter.repository.ScheduleRepository;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -17,6 +17,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+@Transactional
 @Service
 public class ScheduleService {
 
